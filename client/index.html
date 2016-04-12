@@ -1,0 +1,159 @@
+<html ng-app="orders_customers">
+<head>
+	<title>Orders and Customers</title>
+	 <!-- require angular -->
+  	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular-route.min.js"></script>
+  	<script>
+  	//Angular code here
+  	var orders_customers = angular.module('orders_customers', ['ngRoute']);
+
+    //routes
+    orders_customers.config(function ($routeProvider){
+      $routeProvider
+        .when('/customers', {
+          templateUrl: '/views/customers.html'
+        })
+        .when('/orders', {
+          templateUrl: '/views/orders.html'
+        })
+        .otherwise({
+          redirectTo: '/'
+        });
+    });
+
+  	//CustomersController
+  	orders_customers.controller("CustomersController", function($scope, CustomerFactory){
+      $scope.customers = [];
+
+      CustomerFactory.index(function(data){
+        $scope.customers = data;
+      })
+
+      $scope.getcustomer = function (){
+        [{name: "Sam", created_at: "April 7, 2016"}];
+      }
+
+      $scope.addcustomer = function(){
+        console.log($scope.new_customer);
+        CustomerFactory.addcustomer($scope.new_customer, function(customers){
+          $scope.customers = customers;
+          $scope.new_customer = {};
+        });
+      }
+
+      $scope.removecustomer = function(customer){
+        console.log(customer);
+        CustomerFactory.removecustomer(customer, function(data){
+          $scope.customers = data;
+        })
+      }
+
+  	})
+  	//OrdersController
+  	orders_customers.controller("OrdersController", function($scope, OrderFactory, CustomerFactory){
+  		$scope.orders = [];
+      $scope.customers=[];
+      $scope.prod=[];
+      $scope.quantity = [];
+
+      OrderFactory.index(function(data){
+        $scope.orders = data;
+        $scope.prod = ["Sneakers", "Apple", "Hat"];
+        $scope.quantity = ["0", "1", "2", "3", "4", "5"];
+      });
+
+      CustomerFactory.index(function(data){
+        $scope.customers = data;
+      })
+
+      $scope.getorder= function(){
+        [];
+      }
+
+      $scope.addorder = function(){
+          // console.log($scope.order);
+          OrderFactory.addorder($scope.order, function(data){
+          // $scope.orders = data;
+            OrderFactory.index(function(data){
+             $scope.orders = data;
+            });
+            $scope.order={};
+          })
+      }
+    })
+
+      
+
+  	//Factories
+    orders_customers.factory('CustomerFactory', function($http){
+      var factory = {};
+      var customers = [];
+
+      factory.index = function(callback) {
+        $http.get('/customers').success(function(output){
+          customers = output;
+          callback(customers);
+        });
+      }
+
+      factory.addcustomer = function(info, callback){
+
+        ($http.post('/customers', info).success(function(output){
+          // console.log(info);
+          factory.index(callback);
+          customers=output;
+          callback(customers);
+        }))
+      }
+
+      factory.removecustomer = function(id_customer, callback){
+        console.log(id_customer);
+        // customers.splice($index, 1);
+        $http.get('/customers/'+id_customer).success(function(output){
+          factory.index(callback);
+          customers = output;
+          callback(customers);
+        })
+        // CustomerFactory.removecustomer(customer, function(data){
+        //   $scope.customers = data;
+        // })
+      }
+
+      return factory;
+    })
+
+    orders_customers.factory('OrderFactory', function($http){
+      var factory = {};
+      var orders = [];
+
+      factory.index = function(callback) {
+        $http.get('/orders').success(function(output){
+          orders = output;
+          callback(orders);
+        });
+      }
+
+      factory.addorder = function(info, callback){
+        $http.post('/orders', info).success(function(output){
+          factory.index(callback);
+          orders=output;
+          callback(orders);
+        });
+      }
+      
+
+      return factory;
+    })
+  	
+  	</script>
+</head>
+<body>
+	<div ng-app="orders_customers">
+        <a href="#/customers">Customers</a> | <a href="#/orders">Orders</a> 
+        <div ng-view="">
+        </div>
+    </div>
+
+</body>
+</html>
